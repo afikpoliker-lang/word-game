@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Game Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@400;700;900&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #121212;
+  --white: #ffffff;
+  --gray-light: #f0eff0;
+  --gray-mid: #d3d6da;
+  --gray-dark: #787c7e;
+  --green: #6aaa64;
+  --yellow: #c9b458;
+  --tile-size: clamp(52px, 13vw, 62px);
+  --conn-tile-h: clamp(56px, 14vw, 72px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Heebo', sans-serif;
+  background: var(--white);
+  color: var(--black);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+.nyt-header {
+  border-bottom: 1px solid var(--gray-mid);
+  padding: 0 16px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+.nyt-header .logo {
+  font-family: 'Noto Serif Hebrew', serif;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: -0.5px;
+}
+.back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Heebo', sans-serif;
+  color: var(--black);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+  font-weight: 500;
+}
+.back-btn:hover { text-decoration: underline; }
+
+/* ── HOME ── */
+#homeView { flex: 1; }
+.home-title {
+  text-align: center;
+  padding: 32px 16px 24px;
+  border-bottom: 1px solid var(--gray-mid);
+}
+.home-title h1 {
+  font-family: 'Noto Serif Hebrew', serif;
+  font-size: clamp(26px, 6vw, 34px);
+  font-weight: 900;
+}
+.home-title p {
+  color: var(--gray-dark);
+  margin-top: 6px;
+  font-size: 14px;
+}
+.games-grid {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.game-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 4px;
+  border-bottom: 1px solid var(--gray-mid);
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 0;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  text-align: right;
+}
+.game-card:first-child { border-top: 1px solid var(--gray-mid); }
+.game-card:hover { background: var(--gray-light); }
+.game-card-text h2 {
+  font-size: 17px;
+  font-weight: 700;
+  font-family: 'Noto Serif Hebrew', serif;
+}
+.game-card-text p {
+  font-size: 13px;
+  color: var(--gray-dark);
+  margin-top: 3px;
+}
+.game-card-icon { font-size: 26px; margin-left: 8px; }
+.game-card-arrow { color: var(--gray-dark); font-size: 16px; margin-right: 4px; }
+
+/* ── SCREENS ── */
+.screen { display: none; flex: 1; flex-direction: column; }
+.screen.active { display: flex; }
+.game-area {
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.game-title {
+  font-family: 'Noto Serif Hebrew', serif;
+  font-weight: 900;
+  font-size: 20px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.game-subtitle {
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray-dark);
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--gray-mid);
+  padding-bottom: 14px;
+}
+
+/* ── WORDLE ── */
+#wboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0;
+}
+.w-row {
+  display: flex;
+  gap: 6px;
+}
+.w-cell {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border: 2px solid var(--gray-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: clamp(18px, 5vw, 22px);
+  font-family: 'Heebo', sans-serif;
+  transition: border-color 0.1s;
+  user-select: none;
+}
+.w-cell.filled { border-color: var(--gray-dark); animation: pop 0.1s ease; }
+.w-cell.green { background: var(--green); color: white; border-color: var(--green); }
+.w-cell.yellow { background: var(--yellow); color: white; border-color: var(--yellow); }
+.w-cell.gray { background: var(--gray-dark); color: white; border-color: var(--gray-dark); }
+@keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+.shake { animation: shake 0.4s ease; }
+@keyframes flip {
+  0%{transform:rotateX(0)} 50%{transform:rotateX(-90deg)} 100%{transform:rotateX(0)}
+}
+.w-cell.flip-0 { animation: flip 0.5s ease 0s; }
+.w-cell.flip-1 { animation: flip 0.5s ease 0.1s; }
+.w-cell.flip-2 { animation: flip 0.5s ease 0.2s; }
+.w-cell.flip-3 { animation: flip 0.5s ease 0.3s; }
+.w-cell.flip-4 { animation: flip 0.5s ease 0.4s; }
+
+/* Keyboard */
+.keyboard { margin-top: auto; padding-bottom: 8px; }
+.kb-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  flex-wrap: nowrap;
+}
+.kb-key {
+  height: 56px;
+  min-width: 32px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: none;
+  background: var(--gray-mid);
+  font-family: 'Heebo', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 1;
+  max-width: 42px;
+  transition: background 0.2s, color 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.kb-key.wide { max-width: 64px; font-size: 12px; }
+.kb-key.green { background: var(--green); color: white; }
+.kb-key.yellow { background: var(--yellow); color: white; }
+.kb-key.gray { background: var(--gray-dark); color: white; }
+.kb-key:active { opacity: 0.7; }
+
+/* ── CONNECTIONS ── */
+.conn-instructions {
+  font-size: 13px;
+  text-align: center;
+  color: var(--gray-dark);
+  margin-bottom: 12px;
+}
+#solvedGroups { margin-bottom: 8px; }
+.solved-group {
+  padding: 14px 16px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+.solved-group .sg-name {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.solved-group .sg-words {
+  font-size: 14px;
+  margin-top: 2px;
+}
+#cboard {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.conn-tile {
+  background: #efefe6;
+  height: var(--conn-tile-h);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 700;
+  font-size: clamp(11px, 3vw, 14px);
+  cursor: pointer;
+  padding: 4px;
+  transition: background 0.15s, transform 0.1s;
+  user-select: none;
+  line-height: 1.2;
+  -webkit-tap-highlight-color: transparent;
+}
+.conn-tile.selected {
+  background: #5a594e;
+  color: white;
+  transform: scale(0.96);
+}
+.conn-tile:active { transform: scale(0.93); }
+@keyframes bounce {
+  0%,100%{transform:translateY(0)} 30%{transform:translateY(-8px)} 60%{transform:translateY(-4px)}
+}
+.conn-tile.bounce { animation: bounce 0.5s ease; }
+.conn-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.nyt-btn {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 100px;
+  border: 2px solid var(--black);
+  background: white;
+  font-family: 'Heebo', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.nyt-btn:hover, .nyt-btn.primary { background: var(--black); color: white; }
+.nyt-btn:active { opacity: 0.7; }
+.mistakes-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gray-dark);
+  margin-bottom: 8px;
+}
+.mistake-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--gray-dark);
+  transition: background 0.3s, transform 0.3s;
+}
+.mistake-dot.used { background: #ccc; transform: scale(0.8); }
+#cmsg {
+  text-align: center;
+  font-size: 14px;
+  min-height: 20px;
+  font-weight: 500;
+}
+
+/* ── SONG ── */
+.song-stage-info {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.stage-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--gray-mid);
+  transition: background 0.3s;
+}
+.stage-dot.active { background: var(--black); }
+#lyrics {
+  background: var(--gray-light);
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 110px;
+  font-size: 16px;
+  line-height: 1.7;
+  direction: ltr;
+  text-align: left;
+  font-style: italic;
+  color: #333;
+  margin-bottom: 16px;
+  border-left: 3px solid var(--black);
+}
+#lyrics .lyric-line {
+  animation: fadeInLine 0.4s ease;
+}
+@keyframes fadeInLine { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+#lyrics .song-meta {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-mid);
+  font-style: normal;
+  font-size: 13px;
+  color: var(--gray-dark);
+  direction: rtl;
+}
+.song-input-row {
+  display: flex;
+  gap: 8px;
+}
+.nyt-input {
+  flex: 1;
+  height: 44px;
+  border: 2px solid var(--gray-mid);
+  border-radius: 100px;
+  padding: 0 16px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+  direction: rtl;
+  background: white;
+}
+.nyt-input:focus { border-color: var(--black); }
+#smsg {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 20px;
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  background: var(--black);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── RESULT MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal {
+  background: white;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 16px 16px 0 0;
+  padding: 32px 24px 40px;
+  text-align: center;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from{transform:translateY(40px)} to{transform:translateY(0)} }
+.modal h2 { font-family: 'Noto Serif Hebrew', serif; font-size: 22px; margin-bottom: 8px; }
+.modal p { color: var(--gray-dark); margin-bottom: 20px; font-size: 15px; }
+.modal .nyt-btn { width: 100%; justify-content: center; display: flex; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div id="modalEmoji" style="font-size:48px;margin-bottom:12px"></div>
+    <h2 id="modalTitle"></h2>
+    <p id="modalBody"></p>
+    <button class="nyt-btn primary" onclick="closeModal()">סגור</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="homeView">
+  <div class="nyt-header">
+    <div class="logo">Game Hub</div>
+    <div style="font-size:12px;color:var(--gray-dark)">יומי</div>
+  </div>
+  <div class="home-title">
+    <h1>משחקי מילים</h1>
+    <p>בחרי את המשחק שלך להיום</p>
+  </div>
+  <div class="games-grid">
+    <div class="game-card" onclick="openGame('wordle')">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="game-card-icon">🟩</div>
+        <div class="game-card-text">
+          <h2>5 אותיות</h2>
+          <p>נחשי את המילה הסודית תוך 6 ניסיונות</p>
+        </div>
+      </div>
+      <div class="game-card-arrow">›</div>
+    </div>
+    <div class="game-card" onclick="openGame('conn')">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="game-card-icon">🟨</div>
+        <div class="game-card-text">
+          <h2>מה הקשר?</h2>
+          <p>מצאי את הקשר בין 16 המילים</p>
+        </div>
+      </div>
+      <div class="game-card-arrow">›</div>
+    </div>
+    <div class="game-card" onclick="openGame('song')">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="game-card-icon">🎵</div>
+        <div class="game-card-text">
+          <h2>איזה שיר?</h2>
+          <p>זהי את השיר לפי המילים</p>
+        </div>
+      </div>
+      <div class="game-card-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- WORDLE -->
+<div id="wordle" class="screen">
+  <div class="nyt-header">
+    <button class="back-btn" onclick="backHome()">‹ חזרה</button>
+    <div class="logo">5 אותיות</div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="game-area">
+    <div class="game-title">5 אותיות</div>
+    <div class="game-subtitle">נחשי את המילה הסודית בת 5 אותיות</div>
+    <div id="wboard"></div>
+    <div class="keyboard" id="keyboard"></div>
+  </div>
+</div>
+
+<!-- CONNECTIONS -->
+<div id="conn" class="screen">
+  <div class="nyt-header">
+    <button class="back-btn" onclick="backHome()">‹ חזרה</button>
+    <div class="logo">מה הקשר?</div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="game-area">
+    <div class="game-title">מה הקשר?</div>
+    <div class="game-subtitle">מצאי 4 קבוצות של 4 מילים קשורות</div>
+    <div id="solvedGroups"></div>
+    <div id="cboard"></div>
+    <div class="mistakes-row">
+      <span>טעויות שנותרו:</span>
+      <div id="mistakeDots" style="display:flex;gap:5px"></div>
+    </div>
+    <div class="conn-actions">
+      <button class="nyt-btn" onclick="shuffleConn()">ערבב</button>
+      <button class="nyt-btn" onclick="deselectAll()">בטל בחירה</button>
+      <button class="nyt-btn primary" onclick="checkConn()">שלח</button>
+    </div>
+    <div id="cmsg"></div>
+  </div>
+</div>
+
+<!-- SONG -->
+<div id="song" class="screen">
+  <div class="nyt-header">
+    <button class="back-btn" onclick="backHome()">‹ חזרה</button>
+    <div class="logo">איזה שיר?</div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="game-area">
+    <div class="game-title">איזה שיר?</div>
+    <div class="game-subtitle">זהי את השיר לפי המילים — כל ניסיון כושל חושף שורה נוספת</div>
+    <div class="song-stage-info" id="stageDots"></div>
+    <div id="lyrics"></div>
+    <div class="song-input-row">
+      <input class="nyt-input" id="sguess" placeholder="שם השיר..." onkeydown="if(event.key==='Enter')checkSong()">
+      <button class="nyt-btn primary" onclick="checkSong()">שלח</button>
+    </div>
+    <div id="smsg"></div>
+  </div>
+</div>
+
+<script>
+// ── NAVIGATION ──
+function openGame(g) {
+  document.getElementById('homeView').style.display = 'none';
+  document.querySelectorAll('.screen').forEach(x => x.classList.remove('active'));
+  document.getElementById(g).classList.add('active');
+}
+function backHome() {
+  document.getElementById('homeView').style.display = 'block';
+  document.querySelectorAll('.screen').forEach(x => x.classList.remove('active'));
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+function showModal(emoji, title, body) {
+  document.getElementById('modalEmoji').textContent = emoji;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').textContent = body;
+  document.getElementById('modal').classList.add('show');
+}
+function showToast(msg, duration = 1800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ── WORDLE ──
+const WORD = "פוליז";
+let wRow = 0, wDone = false;
+const keyStates = {};
+
+function buildWordleBoard() {
+  const board = document.getElementById('wboard');
+  board.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const r = document.createElement('div');
+    r.className = 'w-row';
+    r.id = 'wr' + i;
+    for (let j = 0; j < 5; j++) {
+      const c = document.createElement('div');
+      c.className = 'w-cell';
+      c.id = `wc${i}_${j}`;
+      r.appendChild(c);
+    }
+    board.appendChild(r);
+  }
+}
+
+const hebrewRows = [
+  ['פ','ו','מ','ל','ח','ר','א','ב','ג','ד'],
+  ['ה','ז','ח','ט','י','כ','ל','מ','נ','ס'],
+  ['ע','ץ','צ','ק','ש','ת','ן','ף','ך','ם'],
+  ['מחק','שלח']
+];
+
+let currentInput = '';
+
+function buildKeyboard() {
+  const kb = document.getElementById('keyboard');
+  kb.innerHTML = '';
+  const rows = [
+    ['פ','ו','מ','ל','ח','ר','א','ב','ג','ד'],
+    ['ה','ז','ח','ט','י','כ','נ','ס','ע','ץ'],
+    ['מחק', 'צ','ק','ש','ת','ן','ף','ך','ם', 'שלח']
+  ];
+  rows.forEach(row => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'kb-row';
+    row.forEach(key => {
+      const btn = document.createElement('button');
+      btn.className = 'kb-key' + (key === 'מחק' || key === 'שלח' ? ' wide' : '');
+      btn.textContent = key;
+      btn.id = 'kb_' + key;
+      btn.addEventListener('click', () => handleKey(key));
+      rowEl.appendChild(btn);
+    });
+    kb.appendChild(rowEl);
+  });
+}
+
+function handleKey(key) {
+  if (wDone) return;
+  if (key === 'מחק') {
+    currentInput = currentInput.slice(0, -1);
+  } else if (key === 'שלח') {
+    submitWord();
+    return;
+  } else if (currentInput.length < 5) {
+    currentInput += key;
+  }
+  renderInput();
+}
+
+function renderInput() {
+  for (let j = 0; j < 5; j++) {
+    const cell = document.getElementById(`wc${wRow}_${j}`);
+    if (!cell) return;
+    cell.textContent = currentInput[j] || '';
+    cell.classList.toggle('filled', !!currentInput[j]);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('wordle').classList.contains('active')) {
+    const heMap = {
+      'q':'ק','w':'ו','e':'ק','r':'ר','t':'ת','y':'י','u':'ו','i':'נ','o':'מ','p':'פ',
+      'a':'א','s':'ש','d':'ד','f':'פ','g':'ג','h':'ה','j':'ח','k':'כ','l':'ל',
+      'z':'ז','x':'ס','c':'ב','v':'ו','b':'ב','n':'נ','m':'מ'
+    };
+    if (e.key === 'Backspace') handleKey('מחק');
+    else if (e.key === 'Enter') handleKey('שלח');
+    else if (e.key.length === 1) {
+      const ch = heMap[e.key.toLowerCase()] || e.key;
+      if (/[\u05D0-\u05EA]/.test(ch)) handleKey(ch);
+    }
+  }
+});
+
+function submitWord() {
+  if (currentInput.length !== 5) { showToast('5 אותיות בבקשה'); shakeRow(); return; }
+  
+  const target = WORD.split('');
+  const guess = currentInput.split('');
+  const result = Array(5).fill('gray');
+  const usedT = [...target];
+  const usedG = [...guess];
+
+  // greens
+  for (let i = 0; i < 5; i++) {
+    if (guess[i] === target[i]) { result[i] = 'green'; usedT[i] = null; usedG[i] = null; }
+  }
+  // yellows
+  for (let i = 0; i < 5; i++) {
+    if (!usedG[i]) continue;
+    const idx = usedT.indexOf(usedG[i]);
+    if (idx > -1) { result[i] = 'yellow'; usedT[idx] = null; }
+  }
+
+  // animate
+  for (let j = 0; j < 5; j++) {
+    const cell = document.getElementById(`wc${wRow}_${j}`);
+    const color = result[j];
+    setTimeout(() => {
+      cell.classList.add(color, `flip-${j}`);
+    }, j * 100);
+    // update key
+    const key = guess[j];
+    const priority = {green:3,yellow:2,gray:1};
+    if (!keyStates[key] || priority[color] > priority[keyStates[key]]) {
+      keyStates[key] = color;
+      setTimeout(() => {
+        const keyEl = document.getElementById('kb_' + key);
+        if (keyEl) { keyEl.className = 'kb-key ' + (key.length > 1 ? 'wide ' : '') + color; }
+      }, 500);
+    }
+  }
+
+  const won = result.every(r => r === 'green');
+  wRow++;
+  currentInput = '';
+
+  setTimeout(() => {
+    if (won) {
+      wDone = true;
+      const msgs = ['מושלם! 🌟', 'כל הכבוד! 🎉', 'נהדר! ✨'];
+      showModal('🎉', msgs[Math.floor(Math.random()*msgs.length)], `ניחשת את המילה בניסיון ${wRow}!`);
+    } else if (wRow === 6) {
+      wDone = true;
+      showModal('😔', 'לא הצלחת הפעם', `המילה הייתה: ${WORD}`);
+    }
+  }, 600);
+}
+
+function shakeRow() {
+  const row = document.getElementById('wr' + wRow);
+  if (!row) return;
+  row.classList.add('shake');
+  setTimeout(() => row.classList.remove('shake'), 400);
+}
+
+buildWordleBoard();
+buildKeyboard();
+
+// ── CONNECTIONS ──
+const groups = [
+  {name:"שמות משפחה של חברים", color:"#f9df6d", words:["לוחם","הגיבור","היהודי","הר"]},
+  {name:"בובות שאספנו בבלגרד", color:"#a8d5a2", words:["חייזר","אבוקדו","תפוז","פיל"]},
+  {name:"מילים שהצימוד שלהן הוא באבא", color:"#b9d3f0", words:["אלו","סאלי","גנוש","יא"]},
+  {name:"טיקים בסלנג שלנו", color:"#d9c2f0", words:["מכונה","בתול","סנטה קלאוס","ביץ'"]}
+];
+let cSelected = [], cSolved = [], cMistakes = 4;
+
+function buildMistakeDots() {
+  const el = document.getElementById('mistakeDots');
+  el.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const d = document.createElement('div');
+    d.className = 'mistake-dot' + (i >= cMistakes ? ' used' : '');
+    d.id = 'dot' + i;
+    el.appendChild(d);
+  }
+}
+
+function buildConn() {
+  const board = document.getElementById('cboard');
+  board.innerHTML = '';
+  let allWords = groups.filter(g => !cSolved.includes(g.name)).flatMap(g => g.words);
+  allWords = allWords.sort(() => Math.random() - 0.5);
+  allWords.forEach(word => {
+    const d = document.createElement('div');
+    d.className = 'conn-tile';
+    d.textContent = word;
+    d.onclick = () => toggleConn(word, d);
+    board.appendChild(d);
+  });
+}
+
+function toggleConn(word, el) {
+  if (cSelected.includes(word)) {
+    cSelected = cSelected.filter(x => x !== word);
+    el.classList.remove('selected');
+  } else if (cSelected.length < 4) {
+    cSelected.push(word);
+    el.classList.add('selected');
+  }
+}
+
+function deselectAll() {
+  cSelected = [];
+  document.querySelectorAll('.conn-tile').forEach(t => t.classList.remove('selected'));
+}
+
+function shuffleConn() {
+  buildConn();
+}
+
+function checkConn() {
+  if (cSelected.length !== 4) { showToast('יש לבחור 4 מילים'); return; }
+  
+  let found = null, maxMatch = 0;
+  for (const g of groups) {
+    if (cSolved.includes(g.name)) continue;
+    const match = g.words.filter(w => cSelected.includes(w)).length;
+    if (match > maxMatch) { maxMatch = match; }
+    if (match === 4) { found = g; }
+  }
+
+  if (found) {
+    // bounce selected tiles
+    document.querySelectorAll('.conn-tile.selected').forEach((t, i) => {
+      setTimeout(() => t.classList.add('bounce'), i * 100);
+    });
+    setTimeout(() => {
+      cSolved.push(found.name);
+      const d = document.createElement('div');
+      d.className = 'solved-group';
+      d.style.background = found.color;
+      d.innerHTML = `<div class="sg-name">${found.name}</div><div class="sg-words">${found.words.join(' · ')}</div>`;
+      document.getElementById('solvedGroups').appendChild(d);
+      cSelected = [];
+      buildConn();
+      document.getElementById('cmsg').textContent = '';
+      if (cSolved.length === 4) showModal('🎉', 'כל הכבוד!', 'מצאת את כל הקבוצות!');
+    }, 600);
+    return;
+  }
+
+  // wrong
+  cMistakes--;
+  buildMistakeDots();
+  document.querySelectorAll('.conn-tile.selected').forEach(t => {
+    t.classList.remove('selected');
+    t.classList.add('shake');
+    setTimeout(() => t.classList.remove('shake'), 400);
+  });
+  cSelected = [];
+
+  if (maxMatch === 3) {
+    document.getElementById('cmsg').textContent = '⚡ כמעט! 3 מתוך 4';
+  } else {
+    document.getElementById('cmsg').textContent = '❌ לא נכון';
+  }
+
+  if (cMistakes === 0) {
+    setTimeout(() => showModal('😔', 'לא הצלחת הפעם', 'נגמרו הניסיונות'), 400);
+  }
+}
+
+buildConn();
+buildMistakeDots();
+
+// ── SONG ──
+const songLyrics = [
+  "We both understand each other",
+  "so let's get it all out",
+  "We won't blame the",
+  "Last day on me"
+];
+const SINGER = "וויב איש";
+const YEAR = "2025";
+const SONG_NAME = "בואי לא";
+let songStage = 1, songDone = false;
+
+function buildStageDots() {
+  const el = document.getElementById('stageDots');
+  el.innerHTML = '';
+  // stages: 1..4 = lyrics lines, 5 = meta, 6 = name
+  const total = songLyrics.length + 2;
+  for (let i = 1; i <= total; i++) {
+    const d = document.createElement('div');
+    d.className = 'stage-dot' + (i <= songStage ? ' active' : '');
+    el.appendChild(d);
+  }
+}
+
+function renderSong() {
+  const el = document.getElementById('lyrics');
+  el.innerHTML = '';
+  const lines = songLyrics.slice(0, songStage);
+  lines.forEach((line, i) => {
+    const d = document.createElement('div');
+    d.className = 'lyric-line';
+    d.textContent = line;
+    if (i === lines.length - 1) d.style.animation = 'fadeInLine 0.4s ease';
+    el.appendChild(d);
+  });
+  if (songStage > songLyrics.length) {
+    const meta = document.createElement('div');
+    meta.className = 'song-meta';
+    meta.innerHTML = `<b>זמר/ת:</b> ${SINGER} &nbsp;·&nbsp; <b>שנה:</b> ${YEAR}`;
+    if (songStage > songLyrics.length + 1) {
+      meta.innerHTML += `<br><b>שם השיר:</b> ${SONG_NAME}`;
+    }
+    el.appendChild(meta);
+  }
+  buildStageDots();
+}
+
+function checkSong() {
+  if (songDone) return;
+  const guess = document.getElementById('sguess').value.trim();
+  if (!guess) return;
+
+  if (guess === SONG_NAME) {
+    songDone = true;
+    document.getElementById('smsg').textContent = '';
+    showModal('🎉', 'כל הכבוד!', `זיהית את השיר "${SONG_NAME}" של ${SINGER}!`);
+    return;
+  }
+
+  document.getElementById('sguess').value = '';
+  songStage++;
+
+  if (songStage <= songLyrics.length) {
+    renderSong();
+    document.getElementById('smsg').textContent = '❌ לא נכון — שורה נוספת נחשפה';
+  } else if (songStage === songLyrics.length + 1) {
+    renderSong();
+    document.getElementById('smsg').textContent = '❌ לא נכון — נחשפו פרטי השיר';
+  } else {
+    renderSong();
+    songDone = true;
+    document.getElementById('smsg').textContent = '';
+    setTimeout(() => showModal('😔', 'לא הצלחת הפעם', `השיר היה: "${SONG_NAME}" של ${SINGER}`), 300);
+  }
+}
+
+renderSong();
+</script>
+</body>
+</html>
